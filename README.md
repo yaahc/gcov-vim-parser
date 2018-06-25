@@ -1,5 +1,7 @@
 # gcovcheck
 
+[![Build Status](https://travis-ci.org/jrlusby/gcov-vim-parser.svg?branch=master)](https://travis-ci.org/jrlusby/gcov-vim-parser)
+
 ## Examples
 
 commands for generating gcov data and pulling it back to local machine for
