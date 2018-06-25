@@ -4,7 +4,7 @@ extern crate regex;
 use clap::{App, Arg};
 use regex::Regex;
 use std::cmp::{max, min};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::env;
 use std::fs;
 use std::io::{BufRead, BufReader};
@@ -71,7 +71,7 @@ fn main() {
 
     let diff = |a, &b| max(a, b) - min(a, b);
 
-    let mut matches = HashMap::new();
+    let mut matches = BTreeMap::new();
     for (src_lineno, src_line) in &src_lines {
         for line_cap in &uncovered_lines {
             if src_line == &line_cap["linetext"] {
@@ -83,7 +83,7 @@ fn main() {
                         .unwrap_or(0);
                     format!(
                         "{}:{}:{}:{}",
-                        fname, src_lineno, start_ind, &line_cap["linetext"]
+                        input, src_lineno, start_ind, &line_cap["linetext"]
                     )
                 } else {
                     format!(
