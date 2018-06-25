@@ -1,7 +1,8 @@
 [package]
-name = "gcov-vim-parser"
+name = "gcovcheck"
 version = "0.1.0"
 authors = ["Jane Lusby <jlusby42@gmail.com>"]
 
 [dependencies]
 regex = "1.0.0"
+clap = "2.31.2"
