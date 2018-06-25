@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/jrlusby/gcov-vim-parser.svg?branch=master)](https://travis-ci.org/jrlusby/gcov-vim-parser)
 
-## Examples
+## Necessary commands
 
 commands for generating gcov data and pulling it back to local machine for
 scale-product repo
@@ -38,5 +38,13 @@ directory and copy the handler one to the `handlers` directory. Then you'll need
 to enable the 'gcovcheck' linter in ale with a line like this.
 
 ```vimscript
+Plug 'w0rp/ale' " You can install ale what ever way you want, heres an example using vim-plugged
+
+" important line enabling gcovcheck
 let g:ale_linters = { 'cpp' : ['rscmake', 'cppcheck', 'clangtidy', 'gcovcheck'], 'rust' : [] }
+
+" optional config that I use
+let g:ale_echo_msg_format = '%code: %%s %linter%'
+let g:ale_sign_info = 'X'
+highlight link ALEInfoSign ALEInfo
 ```
