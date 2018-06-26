@@ -63,10 +63,28 @@ fn main() {
         .filter_map(move |line| re.captures(&line))
         .collect();
 
+    let mut disabled = false;
+
     let src_lines: Vec<(usize, String)> = BufReader::new(src_rdr)
         .lines()
+        .filter_map(|line| line.ok())
+        .filter(|line| {
+            if line.contains("LCOV_EXCL_LINE") {
+                false
+            } else if line.contains("LCOV_EXCL_START") {
+                disabled = true;
+                false
+            } else if line.contains("LCOV_EXCL_STOP") {
+                disabled = false;
+                false
+            } else if disabled {
+                false
+            } else {
+                true
+            }
+        })
         .enumerate()
-        .map(move |(lineno, line)| (lineno + 1, line.unwrap()))
+        .map(move |(lineno, line)| (lineno + 1, line))
         .collect();
 
     let diff = |a, &b| max(a, b) - min(a, b);
