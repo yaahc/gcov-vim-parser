@@ -58,9 +58,15 @@ fn main() {
         .map(|line| line.unwrap())
         .collect();
 
-    let uncovered_lines: Vec<regex::Captures<'_>> = gcov_lines
+    let uncovered_lines: Vec<(&str, usize)> = gcov_lines
         .iter()
         .filter_map(|line| re.captures(&line))
+        .map(|caps| {
+            (
+                caps.get(2).map(|m| m.as_str()).unwrap(),
+                caps[1].parse().unwrap(),
+            )
+        })
         .collect();
 
     let mut disabled = false;
@@ -89,26 +95,19 @@ fn main() {
         })
         .collect();
 
-    let diff = |a, &b| max(a, b) - min(a, b);
+    let diff = |a, b| max(a, b) - min(a, b);
 
     let mut matches = BTreeMap::new();
     for (src_lineno, src_line) in &src_lines {
-        for line_cap in &uncovered_lines {
-            if src_line == &line_cap["linetext"] {
-                let linenum: usize = line_cap["linenum"].parse().unwrap();
-
+        for (gcov_line, linenum) in &uncovered_lines {
+            if src_line == gcov_line {
                 let output = if arg_matches.is_present("vimgrep") {
-                    let start_ind = &line_cap["linetext"]
-                        .find(|c: char| !c.is_whitespace())
-                        .unwrap_or(0);
-                    format!(
-                        "{}:{}:{}:{}",
-                        input, src_lineno, start_ind, &line_cap["linetext"]
-                    )
+                    let start_ind = src_line.find(|c: char| !c.is_whitespace()).unwrap_or(0);
+                    format!("{}:{}:{}:{}", input, src_lineno, start_ind, src_line)
                 } else {
                     format!(
                         "[{}:{}]: (uncovered) uncovered:[{}]",
-                        fname, src_lineno, &line_cap["linetext"]
+                        fname, src_lineno, src_line
                     )
                 };
 
