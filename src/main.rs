@@ -52,11 +52,11 @@ fn main() {
     let rdr = fs::File::open(gcov_file).unwrap();
     let src_rdr = fs::File::open(source_file).unwrap();
 
-    let re = Regex::new(r"^\s*#####:\s*(?P<linenum>\d*):(?P<linetext>.*)").unwrap();
+    let re = Regex::new(r"^\s*#####:\s*(\d*):(.*)").unwrap();
 
     let gcov_lines: Vec<String> = BufReader::new(rdr)
         .lines()
-        .map(|line| line.unwrap())
+        .filter_map(|line| line.ok().filter(|line| line.starts_with("    #####:")))
         .collect();
 
     let uncovered_lines: Vec<(&str, usize)> = gcov_lines
@@ -109,17 +109,20 @@ fn main() {
 
     uncovered_lines
         .iter()
-        .for_each(|(line, num)| match source_map.entry(*line) {
-            Entry::Occupied(linenums) => {
-                if let Some(linenum) = linenums.get().iter().min_by_key(|a| diff(**a, num)) {
-                    if arg_matches.is_present("vimgrep") {
-                        let start_ind = line.find(|c: char| !c.is_whitespace()).unwrap_or(0);
-                        println!("{}:{}:{}:{}", input, linenum, start_ind, line)
-                    } else {
-                        println!("[{}:{}]: (uncovered) uncovered:[{}]", fname, linenum, line)
-                    };
-                }
-            }
-            _ => {}
+        .filter_map(|(line, num)| match source_map.entry(*line) {
+            Entry::Occupied(linenums) => linenums
+                .get()
+                .iter()
+                .min_by_key(|a| diff(**a, num))
+                .map(|num| (line, *num)),
+            _ => None,
+        })
+        .for_each(|(line, linenum)| {
+            if arg_matches.is_present("vimgrep") {
+                let start_ind = line.find(|c: char| !c.is_whitespace()).unwrap_or(0);
+                println!("{}:{}:{}:{}", input, linenum, start_ind, line)
+            } else {
+                println!("[{}:{}]: (uncovered) uncovered:[{}]", fname, linenum, line)
+            };
         });
 }
