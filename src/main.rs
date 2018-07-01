@@ -4,7 +4,6 @@ extern crate regex;
 use clap::{App, Arg};
 use regex::Regex;
 use std::cmp::{max, min};
-use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
 use std::env;
 use std::fs;
@@ -101,7 +100,7 @@ fn main() {
     src_lines.iter().for_each(|(lineno, line)| {
         source_map
             .entry(line.as_str())
-            .or_insert(Vec::new())
+            .or_insert_with(Vec::new)
             .push(lineno)
     });
 
@@ -109,13 +108,14 @@ fn main() {
 
     uncovered_lines
         .iter()
-        .filter_map(|(line, num)| match source_map.entry(*line) {
-            Entry::Occupied(linenums) => linenums
-                .get()
-                .iter()
-                .min_by_key(|a| diff(**a, num))
-                .map(|num| (line, *num)),
-            _ => None,
+        .filter_map(|(line, num)| {
+            source_map.get(line).map(|linenums| {
+                linenums
+                    .iter()
+                    .min_by_key(|a| diff(**a, num))
+                    .map(|num| (line, *num))
+                    .unwrap()
+            })
         })
         .for_each(|(line, linenum)| {
             if arg_matches.is_present("vimgrep") {
