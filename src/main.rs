@@ -51,7 +51,8 @@ fn main() {
     let rdr = fs::File::open(gcov_file).unwrap();
     let src_rdr = fs::File::open(source_file).unwrap();
 
-    let re = Regex::new(r"^\s*#####:\s*(\d*):(.*)").unwrap();
+    let gcov_re = Regex::new(r"^\s*#####:\s*(\d*):(.*)").unwrap();
+    let lcov_re = Regex::new(r"LCOV_EXCL_(LINE|START|STOP)").unwrap();
 
     let gcov_lines: Vec<String> = BufReader::new(rdr)
         .lines()
@@ -60,7 +61,7 @@ fn main() {
 
     let uncovered_lines: Vec<(&str, usize)> = gcov_lines
         .iter()
-        .filter_map(|line| re.captures(&line))
+        .filter_map(|line| gcov_re.captures(&line))
         .map(|caps| {
             (
                 caps.get(2).map(|m| m.as_str()).unwrap(),
@@ -79,13 +80,12 @@ fn main() {
             _ => None,
         })
         .filter_map(|(lineno, line)| {
-            if line.contains("LCOV_EXCL_LINE") {
-                None
-            } else if line.contains("LCOV_EXCL_START") {
-                disabled = true;
-                None
-            } else if line.contains("LCOV_EXCL_STOP") {
-                disabled = false;
+            if lcov_re.is_match(&line) {
+                if line.contains("LCOV_EXCL_START") {
+                    disabled = true
+                } else if line.contains("LCOV_EXCL_STOP") {
+                    disabled = false;
+                }
                 None
             } else if disabled {
                 None
