@@ -1,4 +1,4 @@
 #! /bin/bash
 
-cargo install
-ln -s "$(realpath ./bin/covrun)" ~/bin
+cargo install --force
+ln -sf "$(realpath ./bin/covrun)" ~/bin
