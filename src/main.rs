@@ -1,11 +1,11 @@
 extern crate clap;
 extern crate regex;
+extern crate dirs;
 
 use clap::{App, Arg};
 use regex::Regex;
 use std::cmp::{max, min};
 use std::collections::BTreeMap;
-use std::env;
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -43,7 +43,7 @@ fn main() {
         .into_string()
         .unwrap();
 
-    let gcov_file = env::home_dir()
+    let gcov_file = dirs::home_dir()
         .unwrap()
         .join("gcov")
         .join(fname.clone() + ".gcov");
