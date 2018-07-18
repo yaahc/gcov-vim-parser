@@ -48,15 +48,18 @@ fn main() {
         .join("gcov")
         .join(fname.clone() + ".gcov");
 
+    println!("{:?}", gcov_file);
+
+
     let rdr = fs::File::open(gcov_file).unwrap();
     let src_rdr = fs::File::open(source_file).unwrap();
 
-    let gcov_re = Regex::new(r"^\s*#####:\s*(\d*):(.*)").unwrap();
+    let gcov_re = Regex::new(r"^\s*(#####|=====):\s*(\d*):(.*)").unwrap();
     let lcov_re = Regex::new(r"LCOV_EXCL_(LINE|START|STOP)").unwrap();
 
     let gcov_lines: Vec<String> = BufReader::new(rdr)
         .lines()
-        .filter_map(|line| line.ok().filter(|line| line.starts_with("    #####:")))
+        .filter_map(|line| line.ok().filter(|line| gcov_re.is_match(line)))
         .collect();
 
     let uncovered_lines: Vec<(&str, usize)> = gcov_lines
@@ -64,8 +67,8 @@ fn main() {
         .filter_map(|line| gcov_re.captures(&line))
         .map(|caps| {
             (
-                caps.get(2).map(|m| m.as_str()).unwrap(),
-                caps[1].parse().unwrap(),
+                caps.get(3).map(|m| m.as_str()).unwrap(),
+                caps[2].parse().unwrap(),
             )
         })
         .collect();

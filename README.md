@@ -2,36 +2,44 @@
 
 [![Build Status](https://travis-ci.org/jrlusby/gcov-vim-parser.svg?branch=master)](https://travis-ci.org/jrlusby/gcov-vim-parser)
 
-## Necessary commands
+## Dependencies
 
-For generating gcov data and pulling it back to local machine for
-scale-product repo
+* scale-scripts: internal repo on my buildvm, ask for a clone URL.
 
-generate data, run on buildvm
-
-```bash
-find "$SRC_ROOT" -name "*$1*.cpp" -exec dirname {} \; |
-    sort -u |
-    grep -v "$1unittest" |
-    grep -v onboxtest |
-    grep -v mockobjects |
-    grep -v gen-cpp |
-    grep -v gen_srcs |
-    parallel "cd {}; \
-                echo \"generating coverage for {}\"; \
-                gcov -o $(targetdir) *.cpp >/dev/null 2>&1 && \
-                mv *$1*.gcov /local/gcov 2>/dev/null"
-```
-
-copy data back to local machine
-
-```bash
-rsync -azh -e ssh $BUILDVM_HOSTNAME:/local/gcov/ ~/gcov
-```
+* rust toolchain: use <https://rustup.rs> to install rust if you dont already
+  have it
 
 ## Setup
 
-### easy version, vim quickfix list
+### using vim-ale for gutter markers
+
+install as a vim plugin to enable ale / dispatch support
+
+```vim
+Plug 'jrlusby/gcov-vim-parser', { 'do': './install.sh' }
+
+Plug 'w0rp/ale' " You can install ale what ever way you want, heres an example
+                " using vim-plugged
+
+" important line enabling gcovcheck
+let g:ale_linters = {
+    \ 'cpp' : ['rscmake', 'cppcheck', 'clangtidy', 'gcovcheck'],
+    \ }
+
+" This may also work, untested, either way it makes it clear what you need
+add(g:ale_linters.cpp, 'gcovcheck')
+
+" optional config that I use
+let g:ale_echo_msg_format = '%code: %%s %linter%'
+let g:ale_sign_info = 'X'
+highlight link ALEInfoSign ALEInfo
+
+" Example program used to run covrun script for current buffer (optional)
+Plug 'tpope/vim-dispatch'
+nnoremap <leader>C :Dispatch covrun %:p<CR>
+```
+
+### minimal dependencies, for quickfix list population
 
 To run populate quickfix list and jump to first definition, use :cnext or ]q if
 you have the unimpaired plugin installed to go to next issue
@@ -40,31 +48,23 @@ you have the unimpaired plugin installed to go to next issue
 nnoremap <leader>c :cexpr system('gcovcheck --vimgrep ' . shellescape(expand('%:p')))<CR>
 ```
 
-### nice version, using vim-ale
+## Usage
 
-install as a vim plugin to enable ale / dispatch support
+Run unittests via scunit, or any wrapper to scunit like covrun. Fundamentally
+gcovcheck looks for .gcov files in the `~/gcov` directory. So any script that
+runs unit tests, generates gcov files, and copies them to that directory will
+suffice.
 
-```vimscript
-Plug 'jrlusby/gcov-vim-parser', { 'do': './install.sh' }
+With the included configuration files ALE will run gcovcheck whenever you save
+or open a file, parsing the current text and the copy of the gcov file in
+`~/gcov` and will display whatever coverage lines it finds that are still
+valid. **It does not by default run unit tests or pull new coverage files to
+your local filesystem**, it expects you to do this manually, the included
+optional config for setting up vim dispatch is how I do this.
 
-Plug 'tpope/vim-dispatch'
-nnoremap <leader>d :Dispatch<CR>
-nnoremap <leader>c :Copen<CR>
-nnoremap <leader>C :Dispatch covrun %:p<CR>
-```
-
-```vimscript
-Plug 'w0rp/ale' " You can install ale what ever way you want, heres an example
-                " using vim-plugged
-
-" important line enabling gcovcheck
-let g:ale_linters = {
-    \ 'cpp' : ['rscmake', 'cppcheck', 'clangtidy', 'gcovcheck'],
-    \ 'rust' : [],
-    \ }
-
-" optional config that I use
-let g:ale_echo_msg_format = '%code: %%s %linter%'
-let g:ale_sign_info = 'X'
-highlight link ALEInfoSign ALEInfo
-```
+The covrun script takes the current filename, finds the appropriate unit test,
+even if you're editing the unit test or the corresponding .cpp/.h source files,
+and runs that unit test then runs gcovcheck. There is an included vim compiler
+plugin for covrun that enables error parsing for gcovcheck and gtest unit
+tests, which if used in conjunction with vim-dispatch allows you to jump
+directly to lines in unit tests where errors occured.

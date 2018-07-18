@@ -2,10 +2,12 @@
 
 set -o xtrace
 
-MBUILDLOG="/tmp/covrun.log"
+export MBUILDLOG="/tmp/covrun.log"
+
+SCALE_SCRIPTS_DIR="$(dirname "$(which scunit)")"
 
 # shellcheck disable=SC1090
-. ~/.scalerc
+. "$SCALE_SCRIPTS_DIR"/scalerc
 
 if [ "x" == "x$1" ]; then
     FULL_PATH="$(find "$GIT_ROOT" -type f -name "*UnitTest.cpp" | sort -u | fzf --select-1 --exit-0 --multi)"
@@ -19,9 +21,10 @@ common=${without_ext%%UnitTest}
 
 {
     flock -x 3 || exit 1
-    scunit "$common" || exit 1
+    # scunit "${common}UnitTest" || exit 1
+    echo "scunit ${common}UnitTest"
 
     echo "coverage report"
-    echo $FULLPATH
+    echo "$FULL_PATH"
     gcovcheck --vimgrep "$FULL_PATH"
 } 3>/tmp/rscmake.lock | convertToPwd
