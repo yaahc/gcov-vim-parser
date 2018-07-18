@@ -1,6 +1,6 @@
 #! /bin/bash
 
-set -o xtrace
+set -e
 
 export MBUILDLOG="/tmp/covrun.log"
 
@@ -21,8 +21,7 @@ common=${without_ext%%UnitTest}
 
 {
     flock -x 3 || exit 1
-    # scunit "${common}UnitTest" || exit 1
-    echo "scunit ${common}UnitTest"
+    scunit "${common}UnitTest" || exit 1
 
     echo "coverage report"
     echo "$FULL_PATH"
