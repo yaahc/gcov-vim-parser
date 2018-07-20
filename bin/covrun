@@ -20,7 +20,7 @@ without_ext=${FILE_BASE%.*}
 common=${without_ext%%UnitTest}
 
 {
-    flock -x 3 || exit 1
+    flock 3 || exit 1
     scunit "${common}UnitTest" || exit 1
 
     echo "coverage report"

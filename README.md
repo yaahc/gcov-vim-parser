@@ -5,7 +5,6 @@
 ## Dependencies
 
 * scale-scripts: internal repo on my buildvm, ask for a clone URL.
-
 * rust toolchain: use <https://rustup.rs> to install rust if you dont already
   have it
 
@@ -16,10 +15,8 @@
 install as a vim plugin to enable ale / dispatch support
 
 ```vim
-Plug 'jrlusby/gcov-vim-parser', { 'do': './install.sh' }
-
-Plug 'w0rp/ale' " You can install ale what ever way you want, heres an example
-                " using vim-plugged
+Plug 'w0rp/ale'
+Plug 'yaahallo/gcov-vim-parser', { 'do': './install.sh' }
 
 " important line enabling gcovcheck
 let g:ale_linters = {
@@ -27,16 +24,12 @@ let g:ale_linters = {
     \ }
 
 " This may also work, untested, either way it makes it clear what you need
-add(g:ale_linters.cpp, 'gcovcheck')
+" add(g:ale_linters.cpp, 'gcovcheck')
 
 " optional config that I use
 let g:ale_echo_msg_format = '%code: %%s %linter%'
 let g:ale_sign_info = 'X'
 highlight link ALEInfoSign ALEInfo
-
-" Example program used to run covrun script for current buffer (optional)
-Plug 'tpope/vim-dispatch'
-nnoremap <leader>C :Dispatch covrun %:p<CR>
 ```
 
 ### minimal dependencies, for quickfix list population
@@ -44,7 +37,7 @@ nnoremap <leader>C :Dispatch covrun %:p<CR>
 To run populate quickfix list and jump to first definition, use :cnext or ]q if
 you have the unimpaired plugin installed to go to next issue
 
-```vimscript
+```vim
 nnoremap <leader>c :cexpr system('gcovcheck --vimgrep ' . shellescape(expand('%:p')))<CR>
 ```
 
@@ -61,6 +54,12 @@ or open a file, parsing the current text and the copy of the gcov file in
 valid. **It does not by default run unit tests or pull new coverage files to
 your local filesystem**, it expects you to do this manually, the included
 optional config for setting up vim dispatch is how I do this.
+
+```vim
+" Example program used to run covrun script for current buffer (optional)
+Plug 'tpope/vim-dispatch'
+nnoremap <leader>C :Dispatch covrun %:p<CR>
+```
 
 The covrun script takes the current filename, finds the appropriate unit test,
 even if you're editing the unit test or the corresponding .cpp/.h source files,
