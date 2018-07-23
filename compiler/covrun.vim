@@ -7,4 +7,4 @@ let current_compiler = "covrun"
 
 " CompilerSet makeprg=covrun
 CompilerSet makeprg=covrun\ %:p
-CompilerSet errorformat=%f:%l:%c:\ %m,%f:%l:\ Failure
+CompilerSet errorformat=%f:%l:%c:\ %m,%f:%l:\ Failure,%f:%l:%c:%tRROR:\ %m

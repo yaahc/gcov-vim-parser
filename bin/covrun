@@ -9,19 +9,18 @@ SCALE_SCRIPTS_DIR="$(dirname "$(which scunit)")"
 # shellcheck disable=SC1090
 . "$SCALE_SCRIPTS_DIR"/scalerc
 
-if [ "x" == "x$1" ]; then
-    FULL_PATH="$(find "$GIT_ROOT" -type f -name "*UnitTest.cpp" | sort -u | fzf --select-1 --exit-0 --multi)"
-else
-    FULL_PATH=$1
-fi
-
+FULL_PATH=$1
 FILE_BASE=$(basename "$FULL_PATH")
 without_ext=${FILE_BASE%.*}
 common=${without_ext%%UnitTest}
 
 {
     flock 3 || exit 1
-    scunit "${common}UnitTest" || exit 1
+    scunit "${common}UnitTest" || (
+        UNIT_PATH=$(find "$SC_GIT_ROOT" -type f -name "${common}UnitTest.cpp")
+        echo "$UNIT_PATH:0:0:ERROR: Unit Test Failed"
+        exit 1
+    )
 
     echo "coverage report"
     echo "$FULL_PATH"
